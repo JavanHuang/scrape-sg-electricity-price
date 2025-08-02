@@ -23,9 +23,14 @@ def scrape_geneco():
     try:
         res = requests.get("https://www.geneco.sg/residential/electricity-plans/")
         soup = BeautifulSoup(res.text, "html.parser")
-        plan = soup.find(text="Get It Fixed 24")
-        rate = plan.find_next("div").text.strip() if plan else "Not Found"
-        return rate
+        plan_blocks = soup.find_all("div", class_="tab-pane")
+
+        for block in plan_blocks:
+            if "Get It Fixed 24" in block.text:
+                rate_div = block.find("div", class_="plan-rate")
+                if rate_div:
+                    return rate_div.text.strip()
+        return "Rate not found"
     except Exception as e:
         return f"Error: {e}"
 
@@ -33,9 +38,14 @@ def scrape_tuas():
     try:
         res = requests.get("https://www.savewithtuas.com/our-electricity-plans/")
         soup = BeautifulSoup(res.text, "html.parser")
-        plan = soup.find(text="PowerFIX 24")
-        rate = plan.find_next("div").text.strip() if plan else "Not Found"
-        return rate
+        cards = soup.find_all("div", class_="plan-info-box")
+
+        for card in cards:
+            if "PowerFIX 24" in card.text:
+                rate = card.find("h4")
+                if rate:
+                    return rate.text.strip()
+        return "Rate not found"
     except Exception as e:
         return f"Error: {e}"
 
@@ -46,11 +56,12 @@ def scrape_keppel():
         plans = soup.find_all("div", class_="plan-details")
 
         for plan in plans:
-            duration = plan.find("h3")
-            if duration and "24 Months" in duration.text:
-                rate = plan.find("div", class_="rate")
-                return rate.text.strip() if rate else "Rate not found"
-        return "Not Found"
+            title = plan.find("h3")
+            if title and "24 Months" in title.text:
+                rate_div = plan.find("div", class_="rate")
+                if rate_div:
+                    return rate_div.text.strip()
+        return "Rate not found"
     except Exception as e:
         return f"Error: {e}"
 
