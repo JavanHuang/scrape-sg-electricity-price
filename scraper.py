@@ -13,7 +13,7 @@ creds = Credentials.from_service_account_info(service_account_info, scopes=scope
 
 # Setup Google Sheets client
 SPREADSHEET_ID = os.environ["SPREADSHEET_ID"]
-SHEET_NAME = "Sheet1"
+SHEET_NAME = "vendor-pricing"
 client = gspread.authorize(creds)
 sheet = client.open_by_key(SPREADSHEET_ID).worksheet(SHEET_NAME)
 
@@ -39,9 +39,26 @@ def scrape_tuas():
     except Exception as e:
         return f"Error: {e}"
 
+def scrape_keppel():
+    try:
+        res = requests.get("https://www.keppelelectric.com/residential-price-plan")
+        soup = BeautifulSoup(res.text, "html.parser")
+        plans = soup.find_all("div", class_="plan-details")
+
+        for plan in plans:
+            duration = plan.find("h3")
+            if duration and "24 Months" in duration.text:
+                rate = plan.find("div", class_="rate")
+                return rate.text.strip() if rate else "Rate not found"
+        return "Not Found"
+    except Exception as e:
+        return f"Error: {e}"
+
 # Scrape and log to sheet
 geneco_rate = scrape_geneco()
 tuas_rate = scrape_tuas()
+keppel_rate = scrape_keppel()
 
 sheet.append_row([today, "Geneco", "Get It Fixed 24", geneco_rate, 24])
 sheet.append_row([today, "Tuas Power", "PowerFIX 24", tuas_rate, 24])
+sheet.append_row([today, "Keppel Electric", "Fixed 24", keppel_rate, 24])
