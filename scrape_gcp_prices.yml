@@ -1,0 +1,14 @@
+name: Trigger GCP Scraper
+
+on:
+  schedule:
+    - cron: '0 1 * * *'  # Every day at 1am UTC
+  workflow_dispatch:
+
+jobs:
+  call-cloud-function:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Google Cloud Function
+        run: |
+          curl -X POST https://REGION-PROJECT.cloudfunctions.net/scrape_prices
