@@ -23,13 +23,13 @@ def scrape_geneco():
     try:
         res = requests.get("https://www.geneco.sg/residential/electricity-plans/")
         soup = BeautifulSoup(res.text, "html.parser")
-        plan_blocks = soup.find_all("div", class_="tab-pane")
+        rate_wrapper = soup.find("div", class_="plan-rate-wrapper")
 
-        for block in plan_blocks:
-            if "Get It Fixed 24" in block.text:
-                rate_div = block.find("div", class_="plan-rate")
-                if rate_div:
-                    return rate_div.text.strip()
+        if rate_wrapper:
+            rate = rate_wrapper.find("h3", class_="plan-rate")
+            if rate:
+                return f"{rate.text.strip()}¢/kWh"
+
         return "Rate not found"
     except Exception as e:
         return f"Error: {e}"
